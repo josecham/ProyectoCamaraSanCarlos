@@ -15,18 +15,16 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script> 
     <style>
         body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 h-screen w-screen overflow-hidden font-sans">
+<body class="bg-slate-100 text-slate-800 h-screen w-screen font-sans">
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect, createContext, useContext, useRef } = React;
         const CtxLng = createContext();
         const TRNS = {
-            es: { a: "Mis Finanzas", b: "Saldo Total", c: "Ingresos", d: "Gastos", e: "Nueva Transacción", f: "Tipo", g: "Monto", h: "Concepto", i: "Ej: Supermercado", j: "Cancelar", k: "Guardar", l: "Movimientos", m: "registrados", n: "No hay movimientos aún", o: "Ingreso", p: "Gasto", r: "Distribución de Gastos", s: "Otros", t: "Categoría", u: "Análisis", },
-            en: { a: "My Finances", b: "Total Balance", c: "Income", d: "Expense", e: "New Transaction", f: "Type", g: "Amount", h: "Concept", i: "Ex: Supermarket", j: "Cancel", k: "Save", l: "Movements", m: "registered", n: "No movements yet", o: "Income", p: "Expense", r: "Expense Distribution", s: "Others", t: "Category", u: "Analysis", },
+            es: { a: "Mis Finanzas", b: "Saldo Total", c: "Ingresos", d: "Gastos", e: "Nueva Transacción", f: "Tipo", g: "Monto", h: "Concepto", i: "Ej: Supermercado", j: "Cancelar", k: "Guardar", l: "Movimientos", m: "registrados", n: "No hay movimientos aún", o: "Ingreso", p: "Gasto", r: "Distribución de Gastos", s: "Otros", t: "Categoría", u: "Análisis", v: "Acceso Restringido", w: "Introduce la contraseña 1234 para continuar", x: "Contraseña", y: "Incorrecta", z: "Confirmar y Acceder" },
+            en: { a: "My Finances", b: "Total Balance", c: "Income", d: "Expense", e: "New Transaction", f: "Type", g: "Amount", h: "Concept", i: "Ex: Supermarket", j: "Cancel", k: "Save", l: "Movements", m: "registered", n: "No movements yet", o: "Income", p: "Expense", r: "Expense Distribution", s: "Others", t: "Category", u: "Analysis", v: "Restricted Access", w: "Enter password to continue", x: "Password", y: "Incorrect", z: "Confirm and Access" },
         };
         const useLng = () => {
             const ctx = useContext(CtxLng);
@@ -239,6 +237,67 @@
                 </div>
             );
         };
+        
+        // --- COMPONENTE DE MODAL PROTEGIDO ---
+        const MASTER_PASSWORD = '1234'; // ¡ AQUÍ !
+
+        const MDLProtected = ({ isOpen, onClose }) => {
+            const { TR } = useLng();
+            if (!isOpen) return null;
+            
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState(false);
+
+            const hdlClose = (e) => {
+                e.preventDefault();
+                setError(false);
+
+                if (password === MASTER_PASSWORD) {
+                    onClose(); // La contraseña es correcta, permite cerrar el modal
+                    setPassword(''); 
+                } else {
+                    setError(true); 
+                    setPassword('');
+                }
+            };
+            
+            return (
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-800/95 backdrop-blur-lg p-4">
+                    <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-[slideUp_0.3s_ease-out]">
+                        <h2 className="text-2xl font-black mb-4 text-slate-800 flex items-center gap-2">
+                            <i className="ph ph-lock text-rose-500"></i>
+                            {TR.v}
+                        </h2>
+                        <p className="text-slate-500 mb-6 text-sm">{TR.w}.</p>
+
+                        <form onSubmit={hdlClose} className="flex flex-col gap-4">
+                            <div>
+                                <input 
+                                    type="password" 
+                                    value={password} 
+                                    onChange={e => setPassword(e.target.value)} 
+                                    placeholder={TR.x} 
+                                    className={`w-full bg-slate-50 p-4 rounded-xl font-medium outline-none focus:ring-2 ${error ? 'ring-rose-500 border border-rose-500' : 'ring-blue-500/20'}`} 
+                                    autoFocus 
+                                />
+                                {error && <p className="text-rose-500 text-xs mt-1 ml-2 font-medium">{TR.x} {TR.y}.</p>}
+                            </div>
+                            
+                            <div className="flex justify-end mt-4">
+                                <button 
+                                    type="submit" 
+                                    className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 active:scale-95 transition-transform"
+                                >
+                                    {TR.z}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+        // --- FIN COMPONENTE MODAL PROTEGIDO ---
+
         const MainApp = () => {
             const { TR } = useLng();
             const [txs, setTxs] = useState(() => {
@@ -246,8 +305,10 @@
                 return svd ? JSON.parse(svd) : [];
             });
             const [isMdl, setIsMdl] = useState(false);
-            
             const [view, setView] = useState(0); 
+            
+            // CAMBIO CLAVE 1: Inicializa el modal protegido como ABIERTO (true)
+            const [isProtectedMdl, setIsProtectedMdl] = useState(true);
 
             useEffect(() => {
                 localStorage.setItem('financeApp_data', JSON.stringify(txs));
@@ -261,69 +322,88 @@
             };
             const incTtl = txs.filter(t => t.type === 'ingreso').reduce((acc, curr) => acc + curr.amount, 0);
             const expTtl = txs.filter(t => t.type === 'gasto').reduce((acc, curr) => acc + curr.amount, 0);
+            
             return (
                 <div className="h-full max-w-md mx-auto bg-white sm:border-x sm:border-slate-200 relative flex flex-col">
-                    <header className="p-6 pb-2">
-                        <div className="flex justify-between items-center mb-6">
-                            <h1 className="text-2xl font-black text-slate-800">{TR.a}</h1>
-                            <CmbLng />
-                        </div>
-                        <CrdBal inc={incTtl} exp={expTtl} />
-                    </header>
                     
-                    <nav className="flex px-6 mb-4 gap-4">
-                        <button 
-                            onClick={() => setView(0)} 
-                            className={`pb-2 text-lg font-bold transition-colors ${view === 0 ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
-                            {TR.u}
-                        </button>
-                        <button 
-                            onClick={() => setView(1)} 
-                            className={`pb-2 text-lg font-bold transition-colors ${view === 1 ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
-                            {TR.l}
-                        </button>
-                    </nav>
-
-                    <div className="flex-1 overflow-y-auto px-6 pb-24 hide-scrollbar">
-                        
-                        {view === 0 && (
-                            <div className="pt-4">
-                                <DataViz txs={txs} />
-                            </div>
-                        )}
-
-                        {view === 1 && (
-                            <>
-                                <div className="flex justify-between items-end mb-4">
-                                    <h3 className="font-bold text-slate-700 text-lg">{TR.l}</h3>
-                                    <span className="text-xs text-slate-400 font-medium">{txs.length} {TR.m}</span>
+                    {/* CAMBIO CLAVE 2: Muestra el contenido de la aplicación SOLO si el modal está cerrado */}
+                    {!isProtectedMdl && (
+                        <>
+                            <header className="p-6 pb-2">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h1 className="text-2xl font-black text-slate-800">{TR.a}</h1>
+                                    <CmbLng />
                                 </div>
-                                {txs.length === 0 ? (
-                                    <div className="text-center py-10 opacity-50">
-                                        <i className="ph ph-receipt text-4xl mb-2 text-slate-300"></i>
-                                        <p className="text-slate-400">{TR.n}</p>
+                                <CrdBal inc={incTtl} exp={expTtl} />
+                            </header>
+                            
+                            <nav className="flex px-6 mb-4 gap-4">
+                                <button 
+                                    onClick={() => setView(0)} 
+                                    className={`pb-2 text-lg font-bold transition-colors ${view === 0 ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                                    {TR.u}
+                                </button>
+                                <button 
+                                    onClick={() => setView(1)} 
+                                    className={`pb-2 text-lg font-bold transition-colors ${view === 1 ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                                    {TR.l}
+                                </button>
+                            </nav>
+
+                            <div className="flex-1 overflow-y-auto px-6 pb-24">
+                                
+                                {view === 0 && (
+                                    <div className="pt-4">
+                                        <DataViz txs={txs} />
                                     </div>
-                                ) : (
-                                    txs.map(tx => (
-                                        <ItemTx key={tx.id} item={tx} onDelete={delTx} />
-                                    ))
                                 )}
-                            </>
-                        )}
-                    </div>
+
+                                {view === 1 && (
+                                    <>
+                                        <div className="flex justify-between items-end mb-4">
+                                            <h3 className="font-bold text-slate-700 text-lg">{TR.l}</h3>
+                                            <span className="text-xs text-slate-400 font-medium">{txs.length} {TR.m}</span>
+                                        </div>
+                                        {txs.length === 0 ? (
+                                            <div className="text-center py-10 opacity-50">
+                                                <i className="ph ph-receipt text-4xl mb-2 text-slate-300"></i>
+                                                <p className="text-slate-400">{TR.n}</p>
+                                            </div>
+                                        ) : (
+                                            txs.map(tx => (
+                                                <ItemTx key={tx.id} item={tx} onDelete={delTx} />
+                                            ))
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                            
+                            <div className="absolute bottom-6 right-6 z-10">
+                                <button 
+                                    onClick={() => setIsMdl(true)}
+                                    className="w-16 h-16 bg-blue-600 text-white rounded-2xl shadow-xl shadow-blue-600/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
+                                >
+                                    <i className="ph ph-plus text-3xl font-bold"></i>
+                                </button>
+                            </div>
+                        </>
+                    )}
                     
-                    <div className="absolute bottom-6 right-6 z-10">
-                        <button 
-                            onClick={() => setIsMdl(true)}
-                            className="w-16 h-16 bg-blue-600 text-white rounded-2xl shadow-xl shadow-blue-600/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
-                        >
-                            <i className="ph ph-plus text-3xl font-bold"></i>
-                        </button>
-                    </div>
-                    <MDLAdd 
-                        isOpen={isMdl} 
-                        onClose={() => setIsMdl(false)} 
-                        onAdd={addTx} 
+                    {/* El modal de agregar transacciones solo se muestra si el protectedMdl ya se cerró */}
+                    {!isProtectedMdl && (
+                         <MDLAdd 
+                            isOpen={isMdl} 
+                            onClose={() => setIsMdl(false)} 
+                            onAdd={addTx} 
+                        />
+                    )}
+                    
+
+                    {/* El modal protegido SIEMPRE se renderiza para que pueda atrapar el acceso */}
+                    <MDLProtected 
+                        isOpen={isProtectedMdl} 
+                        // Al cerrarse (contraseña correcta), deshabilita el bloqueo y muestra la app
+                        onClose={() => setIsProtectedMdl(false)} 
                     />
                 </div>
             );
@@ -345,3 +425,8 @@
 </body>
 </html>
                
+           
+
+           
+                              
+                           
