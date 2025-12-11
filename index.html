@@ -23,7 +23,7 @@
         const { useState, useEffect, createContext, useContext, useRef } = React;
         const CtxLng = createContext();
         const TRNS = {
-            es: { a: "Mis Finanzas", b: "Saldo Total", c: "Ingresos", d: "Gastos", e: "Nueva Transacción", f: "Tipo", g: "Monto", h: "Concepto", i: "Ej: Supermercado", j: "Cancelar", k: "Guardar", l: "Movimientos", m: "registrados", n: "No hay movimientos aún", o: "Ingreso", p: "Gasto", r: "Distribución de Gastos", s: "Otros", t: "Categoría", u: "Análisis", v: "Acceso Restringido", w: "Introduce la contraseña 1234 para continuar", x: "Contraseña", y: "Incorrecta", z: "Confirmar y Acceder" },
+            es: { a: "Mis Finanzas", b: "Saldo Total", c: "Ingresos", d: "Gastos", e: "Nueva Transacción", f: "Tipo", g: "Monto", h: "Concepto", i: "Ej: Supermercado", j: "Cancelar", k: "Guardar", l: "Movimientos", m: "registrados", n: "No hay movimientos aún", o: "Ingreso", p: "Gasto", r: "Distribución de Gastos", s: "Otros", t: "Categoría", u: "Análisis", v: "Acceso Restringido", w: "Introduce la contraseña 111 para continuar", x: "Contraseña", y: "Incorrecta", z: "Confirmar y Acceder" },
             en: { a: "My Finances", b: "Total Balance", c: "Income", d: "Expense", e: "New Transaction", f: "Type", g: "Amount", h: "Concept", i: "Ex: Supermarket", j: "Cancel", k: "Save", l: "Movements", m: "registered", n: "No movements yet", o: "Income", p: "Expense", r: "Expense Distribution", s: "Others", t: "Category", u: "Analysis", v: "Restricted Access", w: "Enter password to continue", x: "Password", y: "Incorrect", z: "Confirm and Access" },
         };
         const useLng = () => {
@@ -239,7 +239,7 @@
         };
         
         // --- COMPONENTE DE MODAL PROTEGIDO ---
-        const MASTER_PASSWORD = '1234'; // ¡ AQUÍ !
+        const MASTER_PASSWORD = '111'; 
 
         const MDLProtected = ({ isOpen, onClose }) => {
             const { TR } = useLng();
