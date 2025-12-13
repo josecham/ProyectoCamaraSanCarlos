@@ -238,13 +238,10 @@
             );
         };
         
-        
         const FREE_PASSWORD = '00'; 
-       
         const PREMIUM_PASSWORD = '9999'; 
         
         const ACCESS_KEY = 'financeApp_access_date';
-        // Aproximadamente 6 meses: 182.5 días * 24 horas * 60 minutos * 60 segundos * 1000 milisegundos
         const SIX_MONTHS_MS = 182.5 * 24 * 60 * 60 * 1000; 
         const ACCESS_EXPIRY_MS = SIX_MONTHS_MS;
 
@@ -255,7 +252,6 @@
             const [password, setPassword] = useState('');
             const [error, setError] = useState(false);
 
-            // --- Lógica de Bloqueo / Pago (Premium) ---
             if (isExpired) {
                 
                 const hdlPremiumAccess = (e) => {
@@ -263,7 +259,6 @@
                     setError(false);
 
                     if (password === PREMIUM_PASSWORD) {
-                        // REINICIA EL TIEMPO y CIERRA EL MODAL
                         resetAccessTime(); 
                         onClose();
                         setPassword(''); 
@@ -282,7 +277,6 @@
                             </h2>
                             <p className="text-slate-500 mb-4">{TR.bb}</p>
                             
-                            {/* Formulario para la clave de pago */}
                             <form onSubmit={hdlPremiumAccess} className="flex flex-col gap-4">
                                 <p className="text-sm text-slate-700 font-bold mt-4">{TR.ff}</p>
                                 
@@ -320,10 +314,7 @@
                     </div>
                 );
             }
-            // --- Fin Lógica de Bloqueo / Pago ---
 
-
-            // --- Lógica de Acceso Gratuito (0-6 meses) ---
             const hdlFreeAccess = (e) => {
                 e.preventDefault();
                 setError(false);
@@ -345,7 +336,6 @@
                             {TR.v}
                         </h2>
                         
-                        {/* Mensaje de TikTok para el Periodo Gratuito */}
                         <p className="text-slate-500 mb-3">{TR.dd}</p>
                         <div className="bg-slate-100 p-3 rounded-xl text-center mb-6">
                             <p className="text-xs text-slate-500 mb-1">{TR.cc}</p>
@@ -391,7 +381,6 @@
         const MainApp = () => {
             const { TR } = useLng();
             
-            // Lógica para registrar y verificar el tiempo de acceso
             const [accessDate, setAccessDate] = useState(() => {
                 const svd = localStorage.getItem(ACCESS_KEY);
                 if (svd) {
@@ -403,18 +392,13 @@
                 }
             });
 
-            // Función para RESTABLECER el tiempo (llamada desde el modal al ingresar PREMIUM_PASSWORD)
             const resetAccessTime = () => {
                 const now = Date.now();
                 localStorage.setItem(ACCESS_KEY, now.toString());
-                // Forzamos la actualización del estado para recalcular la expiración y ocultar el modal
                 setAccessDate(now); 
             };
 
-
-            // Usamos la constante de 6 meses para la verificación
             const isTimeExpired = Date.now() - accessDate > ACCESS_EXPIRY_MS;
-            // Fin Lógica de verificación de tiempo
 
             const [txs, setTxs] = useState(() => {
                 const svd = localStorage.getItem('financeApp_data');
@@ -531,7 +515,7 @@
                         isOpen={isProtectedMdl} 
                         onClose={() => setIsProtectedMdl(false)} 
                         isExpired={isTimeExpired}
-                        resetAccessTime={resetAccessTime} // Pasamos la función de reinicio
+                        resetAccessTime={resetAccessTime}
                     />
                 </div>
             );
@@ -551,5 +535,4 @@
         root.render(<RootApp />);
     </script>
 </body>
-</html>                           
-                            
+</html>
