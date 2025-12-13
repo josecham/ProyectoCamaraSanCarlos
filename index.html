@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+     <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -23,8 +23,8 @@
         const { useState, useEffect, createContext, useContext, useRef } = React;
         const CtxLng = createContext();
         const TRNS = {
-            es: { a: "Mis Finanzas", b: "Saldo Total", c: "Ingresos", d: "Gastos", e: "Nueva Transacción", f: "Tipo", g: "Monto", h: "Concepto", i: "Ej: Supermercado", j: "Cancelar", k: "Guardar", l: "Movimientos", m: "registrados", n: "No hay movimientos aún", o: "Ingreso", p: "Gasto", r: "Distribución de Gastos", s: "Otros", t: "Categoría", u: "Análisis", v: "Acceso Restringido", w: "Introduce la contraseña para continuar", x: "Contraseña", y: "Incorrecta", z: "Confirmar y Acceder" },
-            en: { a: "My Finances", b: "Total Balance", c: "Income", d: "Expense", e: "New Transaction", f: "Type", g: "Amount", h: "Concept", i: "Ex: Supermarket", j: "Cancel", k: "Save", l: "Movements", m: "registered", n: "No movements yet", o: "Income", p: "Expense", r: "Expense Distribution", s: "Others", t: "Category", u: "Analysis", v: "Restricted Access", w: "Enter password to continue", x: "Password", y: "Incorrect", z: "Confirm and Access" },
+            es: { a: "Mis Finanzas", b: "Saldo Total", c: "Ingresos", d: "Gastos", e: "Nueva Transacción", f: "Tipo", g: "Monto", h: "Concepto", i: "Ej: Supermercado", j: "Cancelar", k: "Guardar", l: "Movimientos", m: "registrados", n: "No hay movimientos aún", o: "Ingreso", p: "Gasto", r: "Distribución de Gastos", s: "Otros", t: "Categoría", u: "Análisis", v: "Acceso Restringido", w: "Introduce la contraseña para continuar", x: "Contraseña", y: "Incorrecta", z: "Confirmar y Acceder", aa: "Acceso Expirado", bb: "El periodo de uso gratuito (6 meses) ha terminado. Para seguir usando la app, se requiere un pago único.", cc: "La clave para este periodo es", dd: "Gracias por tu apoyo en TikTok! Introduce la clave:", ee: "Ir a TikTok", ff: "Ingresa la clave de reactivación que recibiste al pagar:" },
+            en: { a: "My Finances", b: "Total Balance", c: "Income", d: "Expense", e: "New Transaction", f: "Type", g: "Amount", h: "Concept", i: "Ex: Supermarket", j: "Cancel", k: "Save", l: "Movements", m: "registered", n: "No movements yet", o: "Income", p: "Expense", r: "Expense Distribution", s: "Others", t: "Category", u: "Analysis", v: "Restricted Access", w: "Enter password to continue", x: "Password", y: "Incorrect", z: "Confirm and Access", aa: "Access Expired", bb: "The free usage period (6 months) has ended. A one-time payment is required to continue using the app.", cc: "The key for this period is", dd: "Thanks for your support on TikTok! Enter the key:", ee: "Go to TikTok", ff: "Enter the reactivation key you received after paying:" },
         };
         const useLng = () => {
             const ctx = useContext(CtxLng);
@@ -238,20 +238,97 @@
             );
         };
         
-        const MASTER_PASSWORD = '00'; 
+        
+        const FREE_PASSWORD = '00'; 
+       
+        const PREMIUM_PASSWORD = '9999'; 
+        
+        const ACCESS_KEY = 'financeApp_access_date';
+        // Aproximadamente 6 meses: 182.5 días * 24 horas * 60 minutos * 60 segundos * 1000 milisegundos
+        const SIX_MONTHS_MS = 182.5 * 24 * 60 * 60 * 1000; 
+        const ACCESS_EXPIRY_MS = SIX_MONTHS_MS;
 
-        const MDLProtected = ({ isOpen, onClose }) => {
+        const MDLProtected = ({ isOpen, onClose, isExpired, resetAccessTime }) => {
             const { TR } = useLng();
             if (!isOpen) return null;
             
             const [password, setPassword] = useState('');
             const [error, setError] = useState(false);
 
-            const hdlClose = (e) => {
+            // --- Lógica de Bloqueo / Pago (Premium) ---
+            if (isExpired) {
+                
+                const hdlPremiumAccess = (e) => {
+                    e.preventDefault();
+                    setError(false);
+
+                    if (password === PREMIUM_PASSWORD) {
+                        // REINICIA EL TIEMPO y CIERRA EL MODAL
+                        resetAccessTime(); 
+                        onClose();
+                        setPassword(''); 
+                    } else {
+                        setError(true); 
+                        setPassword('');
+                    }
+                };
+
+                return (
+                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-800/95 backdrop-blur-lg p-4">
+                        <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-[slideUp_0.3s_ease-out]">
+                            <h2 className="text-2xl font-black mb-4 text-slate-800 flex items-center gap-2">
+                                <i className="ph ph-calendar-check text-rose-500"></i>
+                                {TR.aa}
+                            </h2>
+                            <p className="text-slate-500 mb-4">{TR.bb}</p>
+                            
+                            {/* Formulario para la clave de pago */}
+                            <form onSubmit={hdlPremiumAccess} className="flex flex-col gap-4">
+                                <p className="text-sm text-slate-700 font-bold mt-4">{TR.ff}</p>
+                                
+                                <div>
+                                    <input 
+                                        type="password" 
+                                        value={password} 
+                                        onChange={e => setPassword(e.target.value)} 
+                                        placeholder={TR.x} 
+                                        className={`w-full bg-slate-50 p-4 rounded-xl font-medium outline-none focus:ring-2 ${error ? 'ring-rose-500 border border-rose-500' : 'ring-blue-500/20'}`} 
+                                        autoFocus 
+                                    />
+                                    {error && <p className="text-rose-500 text-xs mt-1 ml-2 font-medium">Clave de Pago {TR.y}.</p>}
+                                </div>
+                                
+                                <div className="flex justify-between items-center mt-4 pt-2 border-t border-slate-100">
+                                    <a 
+                                        href="https://www.tiktok.com/@misfinanzas0" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="py-2 text-sm text-blue-600 font-bold hover:text-blue-800 transition-colors flex items-center gap-1"
+                                    >
+                                        <i className="ph ph-tiktok-logo-fill text-xl"></i>
+                                        Solicitar Acceso por TikTok
+                                    </a>
+                                    <button 
+                                        type="submit" 
+                                        className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 active:scale-95 transition-transform"
+                                    >
+                                        Activar Acceso
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                );
+            }
+            // --- Fin Lógica de Bloqueo / Pago ---
+
+
+            // --- Lógica de Acceso Gratuito (0-6 meses) ---
+            const hdlFreeAccess = (e) => {
                 e.preventDefault();
                 setError(false);
 
-                if (password === MASTER_PASSWORD) {
+                if (password === FREE_PASSWORD) {
                     onClose();
                     setPassword(''); 
                 } else {
@@ -264,12 +341,27 @@
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-800/95 backdrop-blur-lg p-4">
                     <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-[slideUp_0.3s_ease-out]">
                         <h2 className="text-2xl font-black mb-4 text-slate-800 flex items-center gap-2">
-                            <i className="ph ph-lock text-rose-500"></i>
+                            <i className="ph ph-tiktok-logo text-rose-500"></i>
                             {TR.v}
                         </h2>
-                        <p className="text-slate-500 mb-6 text-sm">{TR.w}.</p>
+                        
+                        {/* Mensaje de TikTok para el Periodo Gratuito */}
+                        <p className="text-slate-500 mb-3">{TR.dd}</p>
+                        <div className="bg-slate-100 p-3 rounded-xl text-center mb-6">
+                            <p className="text-xs text-slate-500 mb-1">{TR.cc}</p>
+                            <span className="text-3xl font-black text-rose-600 tracking-widest">{FREE_PASSWORD}</span>
+                        </div>
+                        
+                        <a 
+                            href="https://www.tiktok.com/@misfinanzas0" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-sm font-medium text-blue-600 hover:text-blue-800 mb-4 block"
+                        >
+                            <i className="ph ph-tiktok-logo text-lg mr-1"></i>{TR.ee}
+                        </a>
 
-                        <form onSubmit={hdlClose} className="flex flex-col gap-4">
+                        <form onSubmit={hdlFreeAccess} className="flex flex-col gap-4">
                             <div>
                                 <input 
                                     type="password" 
@@ -298,6 +390,32 @@
 
         const MainApp = () => {
             const { TR } = useLng();
+            
+            // Lógica para registrar y verificar el tiempo de acceso
+            const [accessDate, setAccessDate] = useState(() => {
+                const svd = localStorage.getItem(ACCESS_KEY);
+                if (svd) {
+                    return parseInt(svd, 10);
+                } else {
+                    const now = Date.now();
+                    localStorage.setItem(ACCESS_KEY, now.toString());
+                    return now;
+                }
+            });
+
+            // Función para RESTABLECER el tiempo (llamada desde el modal al ingresar PREMIUM_PASSWORD)
+            const resetAccessTime = () => {
+                const now = Date.now();
+                localStorage.setItem(ACCESS_KEY, now.toString());
+                // Forzamos la actualización del estado para recalcular la expiración y ocultar el modal
+                setAccessDate(now); 
+            };
+
+
+            // Usamos la constante de 6 meses para la verificación
+            const isTimeExpired = Date.now() - accessDate > ACCESS_EXPIRY_MS;
+            // Fin Lógica de verificación de tiempo
+
             const [txs, setTxs] = useState(() => {
                 const svd = localStorage.getItem('financeApp_data');
                 return svd ? JSON.parse(svd) : [];
@@ -310,6 +428,7 @@
             useEffect(() => {
                 localStorage.setItem('financeApp_data', JSON.stringify(txs));
             }, [txs]);
+
             const addTx = (data) => {
                 const newTx = { ...data, id: Date.now(), date: new Date().toISOString() };
                 setTxs([newTx, ...txs]);
@@ -411,6 +530,8 @@
                     <MDLProtected 
                         isOpen={isProtectedMdl} 
                         onClose={() => setIsProtectedMdl(false)} 
+                        isExpired={isTimeExpired}
+                        resetAccessTime={resetAccessTime} // Pasamos la función de reinicio
                     />
                 </div>
             );
@@ -430,4 +551,5 @@
         root.render(<RootApp />);
     </script>
 </body>
-</html>
+</html>                           
+                            
