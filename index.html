@@ -12,7 +12,7 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
     </style>
@@ -238,7 +238,6 @@
             );
         };
         
-        // --- COMPONENTE DE MODAL PROTEGIDO ---
         const MASTER_PASSWORD = '00'; 
 
         const MDLProtected = ({ isOpen, onClose }) => {
@@ -253,7 +252,7 @@
                 setError(false);
 
                 if (password === MASTER_PASSWORD) {
-                    onClose(); // La contraseña es correcta, permite cerrar el modal
+                    onClose();
                     setPassword(''); 
                 } else {
                     setError(true); 
@@ -296,7 +295,6 @@
                 </div>
             );
         };
-        // --- FIN COMPONENTE MODAL PROTEGIDO ---
 
         const MainApp = () => {
             const { TR } = useLng();
@@ -307,7 +305,6 @@
             const [isMdl, setIsMdl] = useState(false);
             const [view, setView] = useState(0); 
             
-            // CAMBIO CLAVE 1: Inicializa el modal protegido como ABIERTO (true)
             const [isProtectedMdl, setIsProtectedMdl] = useState(true);
 
             useEffect(() => {
@@ -326,13 +323,27 @@
             return (
                 <div className="h-full max-w-md mx-auto bg-white sm:border-x sm:border-slate-200 relative flex flex-col">
                     
-                    {/* CAMBIO CLAVE 2: Muestra el contenido de la aplicación SOLO si el modal está cerrado */}
                     {!isProtectedMdl && (
                         <>
                             <header className="p-6 pb-2">
                                 <div className="flex justify-between items-center mb-6">
                                     <h1 className="text-2xl font-black text-slate-800">{TR.a}</h1>
-                                    <CmbLng />
+                                    <div className="flex items-center gap-3">
+                                        
+                                        <a 
+                                            href="https://www.tiktok.com/@misfinanzas0" 
+                                            target="_blank" 
+                                            rel="noopener noreferrer" 
+                                            title="Visita nuestro TikTok"
+                                            className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-800 text-white transition-all hover:bg-black"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" className="w-4 h-4 fill-current">
+                                                <path d="M448 209.9a210.7 210.7 0 0 1-122.8-39.7a312.4 312.4 0 0 1-54.7-41.2V262.3a12.2 12.2 0 0 1-11.8 12.2a275.9 275.9 0 0 1-76.3 3.6a146.4 146.4 0 0 1-36.9-25.1a257.5 257.5 0 0 0 35.7 131.9c0 82.2-70.6 150-166.5 150C70.6 512 0 444.2 0 362s70.6-150 166.5-150A195.9 195.9 0 0 1 230 227v-84c13.2-13.6 27.6-26.6 43.1-38.6c15.6-12.1 32.1-23.3 49.5-33.3c35.6-20 73.1-34.8 111.9-42.6V209.9z"/>
+                                            </svg>
+                                        </a>
+                                        
+                                        <CmbLng />
+                                    </div>
                                 </div>
                                 <CrdBal inc={incTtl} exp={expTtl} />
                             </header>
@@ -389,7 +400,6 @@
                         </>
                     )}
                     
-                    {/* El modal de agregar transacciones solo se muestra si el protectedMdl ya se cerró */}
                     {!isProtectedMdl && (
                          <MDLAdd 
                             isOpen={isMdl} 
@@ -398,11 +408,8 @@
                         />
                     )}
                     
-
-                    {/* El modal protegido SIEMPRE se renderiza para que pueda atrapar el acceso */}
                     <MDLProtected 
                         isOpen={isProtectedMdl} 
-                        // Al cerrarse (contraseña correcta), deshabilita el bloqueo y muestra la app
                         onClose={() => setIsProtectedMdl(false)} 
                     />
                 </div>
@@ -424,9 +431,13 @@
     </script>
 </body>
 </html>
+                    
+                  
                
-           
+            
 
-           
-                              
-                           
+        
+
+      
+                                   
+        
